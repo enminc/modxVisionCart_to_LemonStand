@@ -86,9 +86,9 @@
 	while($row = mysqli_fetch_array($res)) {
 		$prod['orig_id'] = $row['id'];
 
-		$prod['publish_date'] = "2012-01-01";
+		$prod['ATTR__New Product'] = 0;
 		if(is_new($row['name'])) {
-			$prod['publish_date'] = date('Y-m-d');
+			$prod['ATTR__New Product'] = 1;
 		}
 		
 		$prod['name'] = clean_name($row['name']);
@@ -98,6 +98,22 @@
 		$prod['sku'] = $row['articlenumber'];
 		$prod['price'] = $row['price'];
 		$prod['total_units_in_stock'] = 100;
+		
+		$prod['ATTR__Size Chart'] = '';
+		$prod['ATTR__Shirt Swatch'] = '';
+
+		$cfields = json_decode($row['customfields']);
+		if($cfields) {
+			foreach($cfields as $jjk => $jjv):
+				if(isset($jjv->sizeChart)) {
+					$prod['ATTR__Size Chart'] = $jjv->sizeChart;
+				}
+				
+				if(isset($jjv->shirtSwatch)) {
+					$prod['ATTR__Shirt Swatch'] = $jjv->shirtSwatch;
+				}
+			endforeach;
+		}
 		
 		$products[] = $prod;
 	}
@@ -157,7 +173,6 @@
 		'Short Description',
 		'Product Type',
 		'Manufacturer',
-		'Publish Date',
 		'Price',
 		'Cost',
 		'Enabled',
@@ -200,6 +215,7 @@
 		'Visible in search results',
 		'Visible in the catalog',
 		'ATTR: #Shirt Swatch',
+		'ATTR: #New Produt',
 		'ATTR: #Size Chart',
 		'Product groups'
 	)";
@@ -216,7 +232,6 @@
 			`Title`,
 			`Long Description`,
 			`Product Type`,
-			`Publish Date`,
 			`Price`,
 			`Enabled`,
 			`Tax Class`,
@@ -227,7 +242,10 @@
 			`Categories`,
 			`Options`,
 			`Visible in search results`,
-			`Visible in the catalog`
+			`Visible in the catalog`,
+			`ATTR__Shirt Swatch`,
+			`ATTR__New Product`,
+			`ATTR__Size Chart`
 		) VALUES";
 
 		$sql .= '(';
@@ -237,7 +255,6 @@
 		$sql .= '"' . mysqli_real_escape_string($conn, $p['title']) . '",';
 		$sql .= '"' . mysqli_real_escape_string($conn, $p['long_description']) . '",';
 		$sql .= '"Goods",';
-		$sql .= '"' . mysqli_real_escape_string($conn, $p['publish_date']) . '",';
 		$sql .= '"' . mysqli_real_escape_string($conn, $p['price']) . '",';
 		$sql .= '1,';
 		$sql .= '"Product",';
@@ -248,7 +265,10 @@
 		$sql .= '"' . mysqli_real_escape_string($conn, $p['categories']) . '",';
 		$sql .= '"' . mysqli_real_escape_string($conn, $p['option_string']) . '",';
 		$sql .= '1,';
-		$sql .= '1)';
+		$sql .= '1,';
+		$sql .= "'{$p['ATTR__Shirt Swatch']}',";
+		$sql .= "'{$p['ATTR__New Product']}',";
+		$sql .= "'{$p['ATTR__Size Chart']}')";
 		
 		if(mysqli_query($conn, $sql) === FALSE) {
 			my_error($sql);
